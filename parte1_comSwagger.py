@@ -16,19 +16,14 @@ def transform(classe):
 
 
 def checa_data(data):
-    if data['ano'] <= 0:
-        return False
-    elif data['mes'] < 1 or data['mes'] > 12:
-        return False
-    elif data['dia'] < 1 or data['dia'] > 31:
-        return False
-    return True
+    return (data['ano'] > 0) and (1 <= data['mes'] <= 12) and (1 <= data['dia'] <= 31)
 
 
 clientes = [Clientes(123, "Ayla", datetime.date(2002,10,22))]
 
 ########################################################################
 # Swagger
+
 
 api = Api(app, version='ayla 2.0', title='Ayla BD', doc='/doc',
           description='Esse é o banco de dados de Ayla', contact='Ayla Florencio')
@@ -47,9 +42,8 @@ us = api.namespace('Primeiras Funções', description='cadastro de usuário')
 
 @us.route('/clientes/<int:cpf>')
 class Encontrar_cliente(Resource):
-    @api.doc(responses={200: 'OK', 404: 'Erro de acesso.'},
-             params={
-                 'cpf': {'description': 'Insirir CPF do cliente', 'example': 123}},
+
+    @api.doc(params={'cpf': {'description': 'Insirir CPF do cliente', 'example': 123}},
              description='Busca o cliente no banco de dados')
     def get(self, cpf):
         for cliente in clientes:
@@ -60,25 +54,24 @@ class Encontrar_cliente(Resource):
 
 @us.route('/clientes/cadastrar')
 class Cadastrar_cliente(Resource):
-    @api.doc(responses={201: 'OK', 400: 'Inválido.'},
-             params={'cpf': {'description': 'Inserir CPF do cliente', 'example': 123},
-                     'nome': {'description': 'Inserir nome do cliente', 'example': "André Silva"},
-                     'data': {'description': 'Inserir data de nascimento', 'example': {'dia': 11, 'mes': 5, 'ano': 2001}}},
-             description='Cadastra o cliente no banco de dados')
+
+    @api.doc(description='Cadastra o cliente no banco de dados')
+
     @api.expect(cliente_model)
     def post(self):
         novo_cliente = request.get_json()
         for cliente in clientes:
             if cliente.cpf == novo_cliente['cpf']:
-                return 'Cliente já existente.', 400
+                return 'Cliente já existente.'
+            
         data_nascimento = (novo_cliente['data'])
-        if checa_data(data_nascimento) == False:
-            return 'Data inválida.', 400
+        if checa_data(data_nascimento) != True:
+            return 'Data inválida.'
 
-        data_checada = datetime.date(data_nascimento["ano"], data_nascimento["mes"], data_nascimento["dia"])
+        checked_date = datetime.date(data_nascimento["ano"], data_nascimento["mes"], data_nascimento["dia"])
 
         cl = Clientes(novo_cliente.get('cpf'),
-                      novo_cliente.get('nome'), data_checada)
+                      novo_cliente.get('nome'), checked_date)
         clientes.append(cl)
         lista = []
         for cliente in clientes:
