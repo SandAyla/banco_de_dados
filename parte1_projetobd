@@ -1,0 +1,43 @@
+from flask import Flask, jsonify, request
+
+app = Flask(__name__)
+
+clientes = [
+    {
+        'cpf': 123,
+        'nome': 'ayla',
+        'data_nascimento': '22-10-2002'
+    },
+    {
+        'cpf': 124,
+        'nome': 'pedro',
+        'data_nascimento': '25-09-2003'
+    },
+    {
+        'cpf': 125,
+        'nome': 'paulo',
+        'data_nascimento': '21-09-2001'
+    },
+]
+@app.route('/clientes', methods=['GET'])
+def tds_clientes():
+    return jsonify(clientes)
+
+@app.route('/clientes', methods=['POST'])
+def add_clientes():
+    novo_cliente= request.get_json()
+    for cliente in clientes:
+        if cliente.get('cpf') == novo_cliente.get('cpf'):
+            return 'Cliente já cadastrado'
+        else:
+            clientes.append(novo_cliente)
+            return jsonify(clientes)
+
+@app.route('/clientes/<int:cpf>', methods=['GET'])
+def obter_clientes(cpf):
+    for cliente in clientes:
+        if cliente.get('cpf') == cpf:
+            return jsonify(cliente)
+
+
+app.run(port=5000, host='localhost', debug=True)
